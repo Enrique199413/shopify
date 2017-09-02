@@ -1,0 +1,252 @@
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/remodal/1.1.1/remodal.min.css">
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<script
+  src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+  integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+  crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/remodal/1.1.1/remodal.js"></script>
+<script>
+  function videoUrl(newVal, index) {
+    var embedFriendlyUrl = "",
+      urlSections,
+      index,
+      youtubeParams = '';
+
+    if (newVal) {
+      /*
+       * Need to convert the urls into a friendly url that can be embedded and be used in the available online players the services have provided
+       * for youtube: src="//www.youtube.com/embed/{{video_id}}"
+       * for vimeo: src="http://player.vimeo.com/video/{{video_id}}
+       */
+
+      if (newVal.indexOf("vimeo") >= 0) { // Displaying a vimeo video
+        if (newVal.indexOf("player.vimeo") >= 0) {
+          embedFriendlyUrl = newVal;
+        } else {
+          embedFriendlyUrl = newVal.replace("http:", "https:");
+          urlSections = embedFriendlyUrl.split(".com/");
+          embedFriendlyUrl = embedFriendlyUrl.replace("vimeo", "player.vimeo");
+          embedFriendlyUrl = embedFriendlyUrl.replace("/" + urlSections[urlSections.length - 1], "/video/" + urlSections[urlSections.length - 1] + "");
+        }
+      } else if (newVal.indexOf("youtu.be") >= 0) {
+
+        index = newVal.indexOf(".be/");
+
+        embedFriendlyUrl = newVal.slice(index + 4, newVal.length);
+        embedFriendlyUrl = "https://www.youtube.com/embed/" + embedFriendlyUrl + youtubeParams;
+      } else if (newVal.indexOf("youtube.com") >= 0) { // displaying a youtube video
+        if (newVal.indexOf("embed") >= 0) {
+          embedFriendlyUrl = newVal + youtubeParams;
+        } else {
+          embedFriendlyUrl = newVal.replace("/watch?v=", "/embed/") + youtubeParams;
+          embedFriendlyUrl = embedFriendlyUrl.split('&')[0];
+          if (embedFriendlyUrl.indexOf('m.youtube.com') != -1) {
+            embedFriendlyUrl = embedFriendlyUrl.replace("m.youtube.com", "youtube.com");
+          }
+        }
+      }
+      document.querySelector('div[data-remodal-id="modal-' + index + '"]').children[1].src = embedFriendlyUrl;
+    }
+
+  }
+</script>
+<div class="remodal-bg more-gallery-square-remodal">
+  <h2 class="more-square-title">{{section.settings.title}}</h2>
+  {% assign totalSquares = 0 %}
+    {% for row in (1..section.settings.rows)%}
+      <div class="more-square-row">
+        {% for column in (1..section.settings.columns)%}
+          {% assign totalSquares = totalSquares | plus: 1 %}
+        	{% for block in section.blocks %}
+        		{% if forloop.index == totalSquares%}
+                  <a style="background: URL('{{block.settings.coverImage | img_url: '720x720'}}');" data-remodal-target="modal-{{forloop.index}}" class="more-square-colum" onclick="videoUrl('{{block.settings.video}}', {{forloop.index}})">
+                    <div class="more-square-backdrop"></div>
+                    <div class="more-square-text">{{block.settings.labelToShow}}</div>
+                    <div>
+                      <div class="remodal" data-remodal-id="modal-{{forloop.index}}">
+                        <i data-remodal-action="close" class="remodal-close fa fa-times"></i>
+                        <iframe width="100%", height="700", src=""frameborder='0'></iframe>
+                      </div>
+                    </div>
+                  </a>
+                {% endif %}
+        
+            {% endfor %}
+        {% endfor%}
+      </div>
+    {% endfor%}
+</div>
+<style>
+  .more-square-colum {
+	padding: {{ section.settings.padding }}px;
+    margin: {{ section.settings.margin }}px;
+    height: {{ section.settings.height }}px;
+    background-size: cover !important;
+  }
+  .more-gallery-square-remodal {
+    width: {{section.settings.width}};
+    text-align: center;
+  }
+  .more-square-backdrop {
+	background-image: linear-gradient(rgba(0,0,0,{{section.settings.transparency}}) 0%,rgba(0,0,0,{{section.settings.transparency}}) 75%,rgba(0,0,0,{{section.settings.transparency}}) 100%);
+  }
+</style>
+{% schema %}
+  {
+    "name": "More - Square Gallery",
+	"class": "more-square-gallery-flex",
+    "settings": [
+	  {
+        "type": "text",
+        "id": "title",
+        "label": "Título"
+      },
+	  {
+        "type": "text",
+        "id": "transparency",
+        "label": "Transparencia",
+        "default": "0.8"
+      },
+      {
+        "type": "text",
+		"id": "padding",
+        "label": "Espaciado",
+		"default": "1"
+      },
+	  {
+        "type": "text",
+		"id": "height",
+        "label": "Largo",
+		"default": "100"
+      },
+	  {
+        "type": "text",
+		"id": "width",
+        "label": "Ancho",
+		"default": "90%"
+      },
+      {
+        "type": "text",
+		"id": "margin",
+        "label": "Margen",
+		"default": "1"
+      },
+      {
+        "type": "range",
+		"id": "columns",
+        "label": "Columnas",
+        "min":       1,
+        "max":        5,
+        "step":       1,
+        "default":   1
+      },
+	  {
+        "type":   "range",
+		"id": "rows",
+        "label": "Filas",
+        "min":       1,
+        "max":        5,
+        "step":       1,
+        "default":   1
+      }
+	],
+	"blocks": [
+      {
+        "type": "video",
+        "name": "Video",
+        "settings": [
+          {
+            "type": "video_url",
+            "id": "video",
+            "label": "Video URL",
+			"accept": ["youtube", "vimeo"]
+          },
+      	  {
+            "type": "image_picker",
+            "id": "coverImage",
+            "label": "Imagen"
+          },
+		  {
+            "type": "text",
+            "id": "labelToShow",
+            "label": "Título del video"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Square Gallery",
+        "category": "More"
+      }
+    ]
+
+  }
+{% endschema %}
+
+{% stylesheet %}
+.more-square-row {
+    display: flex;
+	justify-content: center;
+}
+.more-square-backdrop {
+	width: 100%;
+    text-align: center;
+    cursor: pointer;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    height: 100%;
+}
+.more-square-colum {
+    background: black;
+	color: white;
+	position: relative;
+    width: 100%;
+    text-align: center;
+	cursor: pointer;
+	align-items: center;
+    display: flex;
+    justify-content: center;
+}
+.more-square-gallery-flex {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+.remodal-wrapper {
+    background: rgba(0,0,0,0.7);
+}
+.remodal-close {
+	position: absolute;
+    right: -25px;
+    top: -25px;
+    font-size: 20px !important;
+    color: white;
+}
+.remodal {
+    position: absolute !important;
+    outline: 0 !important;
+    -webkit-text-size-adjust: 100% !important;
+    -ms-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    left: 0 !important;
+    top: calc(50% - 350px) !important;
+    right: 0 !important;
+    width: 85% !important;
+    margin: 0 auto !important;
+}
+.more-square-text {
+	position: absolute;
+    z-index: 1;
+}
+.more-square-title {
+    text-transform: none;
+    font-size: 38px;
+    letter-spacing: 0.5px;
+}
+{% endstylesheet %}
+
+{% javascript %}
+{% endjavascript %}
